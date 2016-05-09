@@ -45,7 +45,6 @@ public:
 	char mapa_entorno_[200][200]; // mapa que muestra el tipo de terreno
 	char mapa_objetos_[200][200]; // mapa que muestra los objetos que estan encima del terreno
 	char mapa_solucion_[100][100]; // Mapa que almacena la solucion que el alumno propone
-	bool mapa_feromonas_[200][200];
 	// Funciones de acceso a los datos
 	void GetCoord(int &fila, int &columna, int &brujula){fila=y_;columna=x_;brujula=orientacion_;};
 	pair <int,int> getCoord();

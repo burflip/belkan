@@ -37,6 +37,7 @@ public:
 	}
 	void printRoute();
 	void printPartialMap();
+	void printFullMap();
 
 private:
 	void translate_map(char mapa_entorno_[][MAP_MAX_SIZE], char mapa_surface_[][MAP_MAX_SIZE]);

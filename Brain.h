@@ -47,6 +47,7 @@ private:
 	queue<char> mochila;
 	pair<int, int> current_goal;
 	bool in_path;
+	int pasos;
 
 };
 

@@ -197,9 +197,9 @@ void Agent::ActualizarInformacion(Environment *env) {
 
 // -----------------------------------------------------------
 Agent::ActionType Agent::Think() {
-	Agent::ActionType accion;// = (Agent::ActionType) brain.Think(*this);
-	mapa_feromonas_[y_][x_] = true;
-	if(!(VISTA_[1] == 'S' || VISTA_[1] == 'T' || VISTA_[1] == 'K') || (SURFACE_[1] >= 'a' && SURFACE_[1] <= 'z')) {
+	Agent::ActionType accion;
+	accion = (Agent::ActionType) brain.Think(*this);
+	/*if(!(VISTA_[1] == 'S' || VISTA_[1] == 'T' || VISTA_[1] == 'K') || (SURFACE_[1] >= 'a' && SURFACE_[1] <= 'z')) {
 		int r = rand() % 100;
 		if(r > 60) {
 			accion = Agent::ActionType::actTURN_L;
@@ -208,7 +208,7 @@ Agent::ActionType Agent::Think() {
 		}
 	} else {
 		accion = Agent::ActionType::actFORWARD;
-	}
+	}*/
 	last_accion_ = accion;
 	return accion;
 }

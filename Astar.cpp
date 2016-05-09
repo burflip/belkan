@@ -143,15 +143,15 @@ bool Astar::createAndInsertNode(pair<int, int> parent_coordinates, pair<int, int
 void Astar::translate_map(char mapa_entorno_[][MAP_MAX_SIZE], char mapa_surface_[][MAP_MAX_SIZE]) {
 	for (int i = 0; i < MAP_MAX_SIZE; i++) {
 		for (int j = 0; j < MAP_MAX_SIZE; j++) {
-			if ((mapa_entorno_[i][j] == 'S' || mapa_entorno_[i][j] == 'T' || mapa_entorno_[i][j] == '?')
+			if ((mapa_entorno_[i][j] == 'S' || mapa_entorno_[i][j] == 'T' || mapa_entorno_[i][j] == '?' || mapa_entorno_[i][j] == 'K')
 					&& (mapa_surface_[i][j] <= 'a' || mapa_surface_[i][j] >= 'z')) {
 				if (mapa_entorno_[i][j] == '?') {
-					the_map[make_pair(i, j)] = '?';
+					the_map[make_pair(j,i)] = '?';
 				} else {
-					the_map[make_pair(i, j)] = '-';
+					the_map[make_pair(j,i)] = '-';
 				}
 			} else {
-				the_map[make_pair(i, j)] = 'x';
+				the_map[make_pair(j,i)] = 'x';
 			}
 		}
 	}
@@ -237,4 +237,15 @@ void Astar::printPartialMap()
 		cout << endl;
 	}
 	cout << "Matrix: " << solution.size() << endl;
+}
+
+void Astar::printFullMap() {
+	cout << "------------------------------------------" << endl;
+	for(int i=0; i<MAP_MAX_SIZE;i++){
+		for(int j=0; j<MAP_MAX_SIZE; j++){
+			cout << the_map[make_pair(j,i)] << " ";
+		}
+		cout << endl;
+	}
+	cout << "------------------------------------------" << endl;
 }
