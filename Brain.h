@@ -35,15 +35,18 @@ public:
 	Brain(Agent &a);
 	virtual ~Brain();
 	void getGoal(Agent &agent);
-	void updateSight(char mapa_entorno_[][200], char mapa_objetos[][200], int x_, int y_);
 
 	ActionType Think(Agent &agent);
-	void translateToMoves(deque<pair<int,int> > path);
+	void translateToMoves(pair<int, int> &agent_coords, int &orientation, deque<pair<int,int> > path);
+	vector<ActionType> lookTo(pair<int,int> &agent_coords, int &orientation, pair<int, int> coords);
+	void tellCurrentPath();
+	deque<pair<int,int> > calculateGoalAndPath(Agent &agent);
 
 private:
-	deque<ActionType> current_path;
+	queue<ActionType> current_path;
 	queue<char> mochila;
 	pair<int, int> current_goal;
+	bool in_path;
 
 };
 

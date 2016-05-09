@@ -8,6 +8,8 @@
 #include <cstring>
 #include <cmath>
 #include <cstdlib>
+#include <cstdlib>
+#include <ctime>
 
 using namespace std;
 void PasarVectoraMapaCaracteres(int fila, int columna, char m[200][200],
@@ -57,6 +59,7 @@ void PasarVectoraMapaCaracteres(int fila, int columna, char m[200][200],
 
 }
 Agent::Agent() {
+	srand (time(NULL));
 	x_ = 99;
 	y_ = 99;
 	orientacion_ = 3;
@@ -194,7 +197,22 @@ void Agent::ActualizarInformacion(Environment *env) {
 
 // -----------------------------------------------------------
 Agent::ActionType Agent::Think() {
-	Agent::ActionType accion = (Agent::ActionType) brain.Think(*this);
+	Agent::ActionType accion;// = (Agent::ActionType) brain.Think(*this);
+	mapa_feromonas_[y_][x_] = true;
+	if(!(VISTA_[1] == 'S' || VISTA_[1] == 'T' || VISTA_[1] == 'K') || (SURFACE_[1] >= 'a' && SURFACE_[1] <= 'z')) {
+		int r = rand() % 100;
+		if(r > 60) {
+			accion = Agent::ActionType::actTURN_L;
+		} else {
+			accion = Agent::ActionType::actTURN_R;
+		}
+	} else {
+		accion = Agent::ActionType::actFORWARD;
+	}
 	last_accion_ = accion;
 	return accion;
+}
+
+pair<int, int> Agent::getCoord() {
+	return pair<int,int>(x_,y_);
 }

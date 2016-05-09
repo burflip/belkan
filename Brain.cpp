@@ -13,12 +13,11 @@
 
 using namespace std;
 Brain::Brain() {
+	in_path = false;
 }
 
 Brain::Brain(Agent &agent) {
-	int x, y, orientacion;
-	agent.GetCoord(x, y, orientacion);
-	cout << x << " " << y << endl;
+	in_path = false;
 }
 
 Brain::~Brain() {
@@ -51,9 +50,190 @@ void Brain::getGoal(Agent &agent) {
 }
 
 Brain::ActionType Brain::Think(Agent &agent) {
-	int x, y, orientacion;
+	Brain::ActionType next_move;
+	do {
+		if (!in_path) {
+			int x, y, orientation;
+			agent.GetCoord(y, x, orientation);
+			pair<int, int> coords = pair<int, int>(x, y);
+			translateToMoves(coords,orientation,calculateGoalAndPath(agent));
+			in_path = true;
+		}
+
+		if (current_path.empty()) {
+			in_path = false;
+			next_move = Brain::ActionType::actIDLE;
+		} else {
+			next_move = current_path.front();
+			current_path.pop();
+		}
+	} while (next_move == Brain::ActionType::actIDLE);
+
+	/*if (!in_path) {
+	 int x, y, orientacion;
+	 pair<bool,bool> solved;
+	 current_path.clear();
+	 getGoal(agent);
+	 agent.GetCoord(y,x, orientacion);
+	 cout << "AGENTE: " << x << "," << y << ". GOAL: " << current_goal.first << "," << current_goal.second << endl;
+	 Astar astar_alg = Astar(agent.mapa_entorno_, agent.mapa_objetos_, pair<int, int>(x, y), current_goal);
+	 solved = astar_alg.solve();
+	 if(solved.second) {
+	 this->current_goal = astar_alg.getGoal();
+	 }
+	 if(!solved.first) {
+	 cout << "ERROR: no se me ocurre una forma de descubrir más mapa!" << endl;
+	 exit(0);
+	 }
+	 astar_alg.printRoute();
+	 translateToMoves(agent, astar_alg.getSolution());
+	 in_path = true;
+
+	 }
+	 cout << "Current Goal: (" << current_goal.first << "," << current_goal.second << ") " << endl;
+	 cout << "POS: (" << agent.x_ << "," << agent.y_ << ") " << endl;
+
+	 if(current_path.size() == 0) {
+	 in_path = false;
+	 current_path.clear();
+	 }
+	 next_move = current_path.front();
+	 current_path.pop_front();
+	 cout << "CS:" << current_path.size() << endl;*/
+
+	return next_move;
+}
+
+void Brain::translateToMoves(pair<int, int> &agent_coords, int &orientation, deque<pair<int, int> > path) {
+	deque<pair<int, int> >::iterator it = path.begin();
+	pair<int, int> partial_coords = pair<int, int>(agent_coords.first,agent_coords.second);
+	while (it != path.end()) {
+		vector<Brain::ActionType> partial_path = lookTo(partial_coords, orientation, *it);
+		partial_path.push_back(Brain::ActionType::actFORWARD);
+		vector<Brain::ActionType>::iterator partial_it = partial_path.begin();
+		while (partial_it != partial_path.end()) {
+			current_path.push(*partial_it);
+			partial_it++;
+		}
+		it++;
+	}
+	vector<Brain::ActionType> partial_path = lookTo(partial_coords, orientation, current_goal);
+	vector<Brain::ActionType>::iterator partial_it = partial_path.begin();
+	while (partial_it != partial_path.end()) {
+		current_path.push(*partial_it);
+		partial_it++;
+	}
+
+}
+
+vector<Brain::ActionType> Brain::lookTo(pair<int, int> &agent_coords, int &orientation, pair<int, int> coords) {
+	vector<Brain::ActionType> move_list;
+	if (agent_coords.first < coords.first) {
+		switch (orientation) {
+		case 0:
+			move_list.push_back(Brain::ActionType::actTURN_R);
+			break;
+		case 2:
+			move_list.push_back(Brain::ActionType::actTURN_L);
+			break;
+		case 3:
+			move_list.push_back(Brain::ActionType::actTURN_R);
+			move_list.push_back(Brain::ActionType::actTURN_R);
+			break;
+		}
+		orientation = 1;
+	} else if (agent_coords.first > coords.first) {
+		switch (orientation) {
+		case 2:
+			move_list.push_back(Brain::ActionType::actTURN_R);
+			break;
+		case 0:
+			move_list.push_back(Brain::ActionType::actTURN_L);
+			break;
+		case 1:
+			move_list.push_back(Brain::ActionType::actTURN_R);
+			move_list.push_back(Brain::ActionType::actTURN_R);
+			break;
+		}
+		orientation = 3;
+	} else if (agent_coords.second > coords.second) {
+		switch (orientation) {
+		case 1:
+			move_list.push_back(Brain::ActionType::actTURN_L);
+			break;
+		case 3:
+			move_list.push_back(Brain::ActionType::actTURN_R);
+			break;
+		case 0:
+			move_list.push_back(Brain::ActionType::actTURN_R);
+			move_list.push_back(Brain::ActionType::actTURN_R);
+			break;
+		}
+		orientation = 0;
+	} else if (agent_coords.second < coords.second) {
+		switch (orientation) {
+		case 3:
+			move_list.push_back(Brain::ActionType::actTURN_L);
+			break;
+		case 1:
+			move_list.push_back(Brain::ActionType::actTURN_R);
+			break;
+		case 0:
+			move_list.push_back(Brain::ActionType::actTURN_R);
+			move_list.push_back(Brain::ActionType::actTURN_R);
+			break;
+		}
+		orientation = 2;
+	}
+	agent_coords = coords;
+	return move_list;
+}
+
+/*void Brain::tellCurrentPath() {
+ deque<Brain::ActionType> deq_tmp = current_path;
+ deque<Brain::ActionType>::iterator it = deq_tmp.begin();
+ cout << "S:" << current_path.size() << ",P=>";
+ while (it != deq_tmp.end()) {
+ switch (*it) {
+ case Brain::ActionType::actFORWARD:
+ cout << "FW,";
+ break;
+ case Brain::ActionType::actTURN_L:
+ cout << "TL,";
+ break;
+ case Brain::ActionType::actTURN_R:
+ cout << "TR,";
+ break;
+ default:
+ cout << "Other";
+ break;
+ }
+ it++;
+ }
+ cout << endl;
+ }*/
+
+deque<pair<int, int> > Brain::calculateGoalAndPath(Agent& agent) {
+	int x, y, orientation;
+	pair<bool, bool> solved;
 	getGoal(agent);
-	agent.GetCoord(x, y, orientacion);
-	Astar astar_alg = Astar(agent.mapa_entorno_,agent.mapa_objetos_,pair<int,int>(x,y), current_goal);
-	astar_alg.solve();
+	deque<pair<int,int> > path;
+	agent.GetCoord(y,x,orientation);
+	cout << "-----------------------------" << endl;
+	cout << "AGENTE: " << x << "," << y << ". GOAL: " << current_goal.first << "," << current_goal.second << endl;
+	Astar astar_alg = Astar(agent.mapa_entorno_, agent.mapa_objetos_, pair<int, int>(x, y), current_goal, true);
+	solved = astar_alg.solve();
+	if (solved.second) {
+		this->current_goal = astar_alg.getGoal();
+	}
+	if (!solved.first) {
+		cout << "ERROR: no se me ocurre una forma de descubrir más mapa!" << endl;
+		exit(0);
+	}
+	cout << "AGENTE: " << x << "," << y << ". GOAL: " << current_goal.first << "," << current_goal.second << endl;
+	cout << "-----------------------------" << endl;
+
+	path = deque<pair<int,int> >(astar_alg.getSolution());
+	astar_alg.printPartialMap();
+	return path;
 }

@@ -22,9 +22,9 @@ class Astar {
 public:
 	virtual ~Astar();
 	Astar();
-	Astar(char mapa_entorno_[][MAP_MAX_SIZE], char mapa_objetos_[][MAP_MAX_SIZE], pair<int, int> origin, pair<int, int> goal);
+	Astar(char mapa_entorno_[][MAP_MAX_SIZE], char mapa_objetos_[][MAP_MAX_SIZE], pair<int, int> origin, pair<int, int> goal, bool ignore_better_choices = false);
 	int heuristic(pair<int, int> coords);
-	void solve();
+	pair<bool,bool> solve();
 	void assingActual(pair<int, int> coords);
 	bool calculateAndOpenAdjacents(pair<int, int> coords);
 	inline deque<pair<int, int> > & getSolution() {
@@ -32,9 +32,15 @@ public:
 	}
 	pair<bool,bool> checkCoordinates(pair<int, int> coords);
 
+	inline pair<int, int> getGoal() const {
+		return goal;
+	}
+	void printRoute();
+	void printPartialMap();
+
 private:
 	void translate_map(char mapa_entorno_[][MAP_MAX_SIZE], char mapa_surface_[][MAP_MAX_SIZE]);
-	bool createAndInsertNode(pair<int, int> coordinates);
+	bool createAndInsertNode(pair<int, int> parent_coordinates, pair<int, int> coordinates);
 	pair<int,int> findBestOpenedChoiceAndCloseIt();
 	void buildSolution();
 	map<pair<int, int>, char> the_map;
@@ -45,6 +51,7 @@ private:
 	pair<int, int> goal;
 	pair<int, int> origin;
 	pair<int, int> actual_node_coords;
+	bool ignore_better_choices;
 };
 
 #endif /* ASTAR_H_ */
