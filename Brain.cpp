@@ -19,6 +19,7 @@ Brain::Brain() {
 	map_oriented = false;
 	first_pk = pair<int, int>(-1, -1);
 	second_pk = pair<int, int>(-1, -1);
+	endgame = false;
 }
 
 Brain::Brain(Agent &agent) {
@@ -27,6 +28,7 @@ Brain::Brain(Agent &agent) {
 	map_oriented = false;
 	first_pk = pair<int, int>(-1, -1);
 	second_pk = pair<int, int>(-1, -1);
+	endgame = false;
 }
 
 Brain::~Brain() {
@@ -63,10 +65,10 @@ Brain::ActionType Brain::Think(Agent &agent) {
 	do {
 		stayAlert(agent);
 		meditate();
-		tellCurrentPath();
+		//tellCurrentPath();
 		if (priorize(agent)) {
 			in_path = true;
-			tellCurrentPath();
+			//tellCurrentPath();
 		}
 		if (!in_path) {
 			int x, y, orientation;
@@ -84,10 +86,8 @@ Brain::ActionType Brain::Think(Agent &agent) {
 			next_move = current_path.front();
 			current_path.pop();
 		}
-	} while (next_move == Brain::ActionType::actIDLE);
+	} while (next_move == Brain::ActionType::actIDLE && !endgame);
 	steps++;
-	cout << "FPK:" << first_pk.first << " " << first_pk.second << endl;
-	cout << "SPK:" << second_pk.first << " " << second_pk.second << endl;
 	return next_move;
 }
 
@@ -227,8 +227,17 @@ deque<pair<int, int> > Brain::calculateGoalAndPath(Agent& agent) {
 		this->current_goal = astar_alg.getGoal();
 	}
 	if (!solved.first) {
-		cout << "ERROR: no se me ocurre una forma de descubrir más mapa!" << endl;
+		//cout << "ERROR: no se me ocurre una forma de descubrir más mapa!" << endl;
 		cout << "PASOS: " << steps << endl;
+		if (map_oriented == false) {
+			cout << "ERROR, mapa no orientado" << endl;
+			exit(0);
+		}
+		cout << "MAP ORIENTATION: " << this->map_orientation << endl;
+		agent.cropAndStoreSolutionMap();
+		agent.rotateSolution(this->map_orientation);
+		agent.isSolved();
+		this->endgame = true;
 		//exit(0);
 	}
 	//yellWhatImDoing(agent.getCoord());
@@ -255,7 +264,7 @@ void Brain::remember(pair<int, int> coords, Memory token) {
 
 bool Brain::priorize(Agent& agent) {
 	bool there_is_something_there = false;
-	map<pair<int,int>,Memory>::iterator it = objectives.begin();
+	map<pair<int, int>, Memory>::iterator it = objectives.begin();
 	if (!this->objectives.empty()) {
 		int x, y, orientation;
 		pair<bool, bool> solved;
@@ -277,7 +286,6 @@ bool Brain::priorize(Agent& agent) {
 			//cout << "I HAVE IT IN NOSE" << endl;
 			iHaveSomethingAhead((*it).second.getItem(), agent);
 		} else {
-			cout << "I HAVE A MISION: " << endl;
 			//yellWhatImDoing(agent.getCoord());
 			Astar astar_alg = Astar(agent.mapa_entorno_, agent.mapa_objetos_, coords, current_goal, true); //Cuidado, movimiento forzado
 			solved = astar_alg.solve();
@@ -387,12 +395,15 @@ void Brain::iAmOnAPK(Agent& agent) {
 	third_space = msg.find(' ', second_space + 1);
 	fourth_space = msg.find(' ', third_space + 1);
 	point = msg.find('.', fourth_space);
-	int x = atoi(msg.substr(second_space, (third_space - second_space)).c_str());
-	int y = atoi(msg.substr(fourth_space, (point - fourth_space)).c_str());
+	int y = atoi(msg.substr(second_space, (third_space - second_space)).c_str());
+	int x = atoi(msg.substr(fourth_space, (point - fourth_space)).c_str());
 	if (this->first_pk.first == -1) {
 		this->first_pk = pair<int, int>(x, y);
+		this->first_pk_agent = agent.getCoord();
 	} else if (this->first_pk != pair<int, int>(x, y)) {
 		this->second_pk = pair<int, int>(x, y);
+		this->second_pk_agent = agent.getCoord();
+		deduceMapOrientation();
 	}
 	map<pair<int, int>, Memory>::iterator it = this->objectives.find(agent.getCoord());
 	if (it != this->objectives.end()) {
@@ -402,4 +413,22 @@ void Brain::iAmOnAPK(Agent& agent) {
 
 void Brain::yellWhatImDoing(pair<int, int> agent_coords) {
 	cout << "AGENTE: " << agent_coords.first << "," << agent_coords.second << ". GOAL: " << current_goal.first << "," << current_goal.second << endl;
+}
+
+void Brain::deduceMapOrientation() {
+	int F1 = first_pk.second - second_pk.second;
+	int F2 = first_pk_agent.second - second_pk_agent.second;
+	int C1 = first_pk.first - second_pk.first;
+	int C2 = first_pk_agent.first - second_pk_agent.first;
+
+	if (F1 == F2 && C1 == C2) {
+		this->map_orientation = 0;
+	} else if (F1 == -F2 && C1 == -C2) {
+		this->map_orientation = 2;
+	} else if (F1 == C2 && F2 == -C1) {
+		this->map_orientation = 1;
+	} else if (F1==-C2 && F2 == C1) {
+		this->map_orientation = 3;
+	}
+ 	map_oriented = true;
 }

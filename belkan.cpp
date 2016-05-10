@@ -12,8 +12,7 @@
 #include <ctime>
 
 using namespace std;
-void PasarVectoraMapaCaracteres(int fila, int columna, char m[200][200],
-		char *v, int brujula) {
+void PasarVectoraMapaCaracteres(int fila, int columna, char m[200][200], char *v, int brujula) {
 	m[fila][columna] = v[0];
 
 	switch (brujula) {
@@ -59,7 +58,7 @@ void PasarVectoraMapaCaracteres(int fila, int columna, char m[200][200],
 
 }
 Agent::Agent() {
-	srand (time(NULL));
+	srand(time(NULL));
 	x_ = 99;
 	y_ = 99;
 	orientacion_ = 3;
@@ -81,12 +80,11 @@ Agent::Agent() {
 			mapa_solucion_[i][j] = '?';
 
 	brain = Brain(*this);
+	solved = false;
 
 }
 void Agent::Perceive(Environment &env) {
-	env.SenSorStatus(VISTA_, SURFACE_, MENSAJE_, REINICIADO_, EN_USO_,
-			MOCHILLA_, PUNTUACION_, FIN_JUEGO_, SALUD_, false);
-
+	env.SenSorStatus(VISTA_, SURFACE_, MENSAJE_, REINICIADO_, EN_USO_, MOCHILLA_, PUNTUACION_, FIN_JUEGO_, SALUD_, false);
 }
 
 bool Agent::Perceive_Remote(conexion_client &Cliente, Environment &env) {
@@ -94,8 +92,7 @@ bool Agent::Perceive_Remote(conexion_client &Cliente, Environment &env) {
 
 	actualizado = env.Perceive_Remote(Cliente);
 	if (actualizado)
-		env.SenSorStatus(VISTA_, SURFACE_, MENSAJE_, REINICIADO_, EN_USO_,
-				MOCHILLA_, PUNTUACION_, FIN_JUEGO_, SALUD_, true);
+		env.SenSorStatus(VISTA_, SURFACE_, MENSAJE_, REINICIADO_, EN_USO_, MOCHILLA_, PUNTUACION_, FIN_JUEGO_, SALUD_, true);
 
 	return actualizado;
 }
@@ -185,24 +182,136 @@ void Agent::ActualizarInformacion(Environment *env) {
 	}
 
 	if (algo_va_mal) {
-		cout
-				<< "CUIDADO: NO ESTAS CONTROLANDO BIEN LA UBICACION DE TU AGENTE\n";
+		cout << "CUIDADO: NO ESTAS CONTROLANDO BIEN LA UBICACION DE TU AGENTE\n";
 	}
 
 	PasarVectoraMapaCaracteres(y_, x_, mapa_entorno_, VISTA_, orientacion_);
 	PasarVectoraMapaCaracteres(y_, x_, mapa_objetos_, SURFACE_, orientacion_);
 	env->ActualizarMatrizUsuario(mapa_entorno_);
+	this->the_env = env;
 
 }
 
 // -----------------------------------------------------------
 Agent::ActionType Agent::Think() {
 	Agent::ActionType accion;
-	accion = (Agent::ActionType) brain.Think(*this);
+	if (!this->solved) {
+		accion = (Agent::ActionType) brain.Think(*this);
+	} else {
+		cout << "PORCENTAJE: " << the_env->Comparar(mapa_solucion_) << "%" << endl;
+		the_env->PutFinJuego();
+		printSolutionMap();
+		exit(0);
+	}
 	last_accion_ = accion;
 	return accion;
 }
 
 pair<int, int> Agent::getCoord() {
-	return pair<int,int>(x_,y_);
+	return pair<int, int>(x_, y_);
 }
+
+void Agent::cropAndStoreSolutionMap() {
+	printSolutionMap();
+	pair<int, int> fc_top_left;
+	int map_size = CURRENT_MAP_SIZE;
+	bool first_appear_i = false, first_appear_j = false;
+	int first_i, first_j;
+	for (int i = 0; i < MAP_MAX_SIZE; i++) {
+		for (int j = 0; j < MAP_MAX_SIZE; j++) {
+			if (!first_appear_i && mapa_entorno_[i][j] != '?') {
+				first_i = i;
+				first_appear_i = true;
+			}
+			if (!first_appear_j && mapa_entorno_[j][i] != '?') {
+				first_j = i;
+				first_appear_j = true;
+			}
+
+		}
+	}
+	fc_top_left = pair<int, int>(first_i, first_j);
+
+	for (int i = fc_top_left.first; i < map_size + fc_top_left.first; i++) {
+		for (int j = fc_top_left.second; j < map_size + fc_top_left.second; j++) {
+			mapa_solucion_[i - fc_top_left.first][j - fc_top_left.second] = mapa_entorno_[i][j];
+		}
+		cout << endl;
+	}
+	cout << "------------------------------------" << endl;
+	printSolutionMap();
+	imagineBorders();
+	imagineForest();
+	printSolutionMap();
+}
+
+void Agent::rotateSolution90() {
+
+	char tmp_map[SOLUTION_MAP_SIZE][SOLUTION_MAP_SIZE];
+	for (int i = 0; i < SOLUTION_MAP_SIZE; i++) {
+		for (int j = 0; j < SOLUTION_MAP_SIZE; j++) {
+			tmp_map[i][j] = mapa_solucion_[j][SOLUTION_MAP_SIZE - i - 1];
+		}
+	}
+	for (int i = 0; i < SOLUTION_MAP_SIZE; i++) {
+		for (int j = 0; j < SOLUTION_MAP_SIZE; j++) {
+			mapa_solucion_[i][j] = tmp_map[i][j];
+		}
+	}
+	//cout << "Rotated" << endl;
+
+}
+
+void Agent::rotateSolution180() {
+	rotateSolution90();
+	rotateSolution90();
+}
+
+void Agent::rotateSolution270() {
+	rotateSolution180();
+	rotateSolution90();
+}
+
+void Agent::rotateSolution(int rotations) {
+	for (int i = 0; i < rotations; i++) {
+		rotateSolution90();
+	}
+}
+
+void Agent::imagineBorders() {
+	for (int i = 0; i < 3; i++) {
+		for (int j = 0; j < CURRENT_MAP_SIZE; j++) {
+			mapa_solucion_[i][j] = 'P';
+			mapa_solucion_[j][i] = 'P';
+			if (i != 3) {
+				mapa_solucion_[CURRENT_MAP_SIZE - i - 1][j] = 'P';
+				mapa_solucion_[j][CURRENT_MAP_SIZE - i - 1] = 'P';
+			}
+		}
+	}
+}
+
+void Agent::imagineForest() {
+	for (int i = 0; i < CURRENT_MAP_SIZE; i++) {
+		for (int j = 0; j < CURRENT_MAP_SIZE; j++) {
+			if (mapa_solucion_[i][j] == '?') {
+				mapa_solucion_[i][j] = 'B';
+			}
+		}
+	}
+}
+
+void Agent::printSolutionMap() {
+	cout << "MAPA SOLUCION:" << endl;
+	cout << "------------------------------------" << endl;
+	for (int i = 0; i < SOLUTION_MAP_SIZE; i++) {
+		for (int j = 0; j < SOLUTION_MAP_SIZE; j++) {
+			cout << mapa_solucion_[i][j];
+		}
+		cout << endl;
+	}
+	cout << "------------------------------------" << endl;
+
+}
+
+

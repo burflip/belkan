@@ -59,6 +59,12 @@ public:
 
 	void yellWhatImDoing(pair<int,int> agent_coords);
 
+	void deduceMapOrientation();
+
+	inline int getMapOrientation() const {
+		return map_orientation;
+	}
+
 private:
 	queue<ActionType> current_path;
 	queue<char> mochila;
@@ -66,13 +72,17 @@ private:
 	bool in_path;
 	int steps;
 	pair<int,int> first_pk;
+	pair<int,int> first_pk_agent;
 	pair<int,int> second_pk;
+	pair<int,int> second_pk_agent;
 	bool map_oriented;
 	map<pair<int,int>, Memory> memories;
 	map<pair<int,int>, Memory> objectives;
 	vector<char> important_surface = {'K'};
 	vector<char> important_objects = {};
 	pair<int,int> current_objective;
+	int map_orientation=-1;
+	bool endgame;
 };
 
 #endif /* BRAIN_H_ */

@@ -11,7 +11,12 @@
 #include <map>
 #include "conexion.h"
 #include "Brain.h"
+
 using namespace std;
+#define SOLUTION_MAP_SIZE 100
+#define MAP_MAX_SIZE 200
+#define CURRENT_MAP_SIZE 30
+
 
 // -----------------------------------------------------------
 //				class Agent
@@ -58,7 +63,19 @@ public:
 	{
 		return MENSAJE_;
 	}
-	int x_,y_, orientacion_;
+	void cropAndStoreSolutionMap();
+	void rotateSolution90();
+	void rotateSolution180();
+	void rotateSolution270();
+	void rotateSolution(int i);
+	void imagineBorders();
+	void imagineForest();
+	void printSolutionMap();
+
+	inline void isSolved() {
+		this->solved = true;
+	}
+
 private:
 	//Variables de interaccion con el entorno grafico
 	int size_;
@@ -75,10 +92,12 @@ private:
 	char SALUD_;
 
 	//Variables de estado
-
+	int x_,y_, orientacion_;
 	int last_accion_;
 	string role_;
 	Brain brain;
+	Environment * the_env;
+	bool solved;
 
 };
 
