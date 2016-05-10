@@ -51,6 +51,13 @@ public:
 	inline int getOrientation() const{
 		return orientacion_;
 	}
+	inline pair<char,char> whatISeeThere(int i){
+		return pair<char,char>(VISTA_[i],SURFACE_[i]);
+	}
+	inline string whatIHear()
+	{
+		return MENSAJE_;
+	}
 	int x_,y_, orientacion_;
 private:
 	//Variables de interaccion con el entorno grafico

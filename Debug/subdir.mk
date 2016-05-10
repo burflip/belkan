@@ -7,6 +7,7 @@ CPP_SRCS += \
 ../Astar.cpp \
 ../Brain.cpp \
 ../GUI.cpp \
+../Memory.cpp \
 ../Node.cpp \
 ../belkan.cpp \
 ../conexion.cpp \
@@ -23,6 +24,7 @@ OBJS += \
 ./Astar.o \
 ./Brain.o \
 ./GUI.o \
+./Memory.o \
 ./Node.o \
 ./belkan.o \
 ./conexion.o \
@@ -40,6 +42,7 @@ CPP_DEPS += \
 ./Astar.d \
 ./Brain.d \
 ./GUI.d \
+./Memory.d \
 ./Node.d \
 ./belkan.d \
 ./conexion.d \
